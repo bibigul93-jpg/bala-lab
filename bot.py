@@ -248,12 +248,8 @@ async def step_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    day = db.get_experiment_day(update.effective_user.id)
-    db.add_points(update.effective_user.id, 15)
-    await update.message.reply_text(
-        f"📸 Фото дня {day} сохранено!\nФотографируй каждый день — тайм-лапс! 🎬\n\n+15 очков! ⭐",
-        reply_markup=main_keyboard()
-    )
+    file_id = update.message.photo[-1].file_id
+    await update.message.reply_text(f"file_id:\n{file_id}")
 
 async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
