@@ -15,12 +15,6 @@ logger = logging.getLogger(__name__)
 db = Database("balalab.db")
 ai = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-# ── КАРТИНКИ ──────────────────────────────────────────────
-RAW = "https://raw.githubusercontent.com/bibigul93-jpg/bala-lab/refs/heads/main/"
-IMG_ALEM     = RAW + "535027871573198377.jpg"
-IMG_HARVEST  = RAW + "535027871573198379.jpg"
-IMG_WATER    = RAW + "535027871573198380.jpg"
-IMG_SPROUTS  = RAW + "535027871573198381.jpg"
 
 SYSTEM_PROMPT = """Ты Алем — дружелюбный ИИ-помощник для детей 6+ из набора BALA LAB Microgreens.
 Ты помогаешь детям выращивать микрозелень (горох, редис, брокколи) дома.
