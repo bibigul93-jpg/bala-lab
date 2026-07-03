@@ -286,8 +286,35 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_id = update.effective_user.id
+
+    # Кнопки меню — всегда работают в первую очередь
+    if "Полить" in text:
+        context.user_data["waiting_height"] = False
+        context.user_data["adding_note"] = False
+        await water(update, context); return
+    elif "Записать рост" in text:
+        context.user_data["waiting_height"] = False
+        context.user_data["adding_note"] = False
+        await measure_start(update, context); return
+    elif "дневник" in text.lower():
+        context.user_data["waiting_height"] = False
+        context.user_data["adding_note"] = False
+        await diary(update, context); return
+    elif "Факт" in text:
+        context.user_data["waiting_height"] = False
+        await fact_of_day(update, context); return
+    elif "Достижени" in text:
+        context.user_data["waiting_height"] = False
+        await achievements(update, context); return
+    elif "Инструкци" in text:
+        context.user_data["waiting_height"] = False
+        await instruction(update, context); return
+
+    # Ввод высоты
     if context.user_data.get("waiting_height"):
         await measure_save(update, context); return
+
+    # Ввод заметки
     if context.user_data.get("adding_note"):
         context.user_data["adding_note"] = False
         day = db.get_experiment_day(user_id)
@@ -295,13 +322,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.add_points(user_id, 5)
         await update.message.reply_text(f"✅ Заметка записана! +5 очков ⭐\n\n\"{text}\"", reply_markup=main_keyboard())
         return
-    if "Полить" in text: await water(update, context)
-    elif "Записать рост" in text: await measure_start(update, context)
-    elif "дневник" in text.lower(): await diary(update, context)
-    elif "Факт" in text: await fact_of_day(update, context)
-    elif "Достижени" in text: await achievements(update, context)
-    elif "Инструкци" in text: await instruction(update, context)
-    else: await ai_reply(update, context)
+
+    # Всё остальное → ИИ
+    await ai_reply(update, context)
 
 async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     for u in db.get_active_users():
