@@ -1,5 +1,5 @@
 """
-BALA LAB — Telegram-бот Алем с ИИ и картинками 🌱
+BALA LAB — Telegram-бот Алем с ИИ 🌱
 """
 import logging
 import os
@@ -15,12 +15,9 @@ logger = logging.getLogger(__name__)
 db = Database("balalab.db")
 ai = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-
 SYSTEM_PROMPT = """Ты Алем — дружелюбный ИИ-помощник для детей 6+ из набора BALA LAB Microgreens.
-Ты помогаешь детям выращивать микрозелень (горох, редис, брокколи) дома.
-Отвечай коротко (2-4 предложения), весело, на русском языке. Используй эмодзи.
-Объясняй научные факты простым языком для детей.
-Контекст пользователя: {USER_CONTEXT}"""
+Помогаешь выращивать микрозелень (горох, редис, брокколи). Отвечай коротко (2-4 предложения), весело, на русском. Используй эмодзи.
+Контекст: {USER_CONTEXT}"""
 
 def main_keyboard():
     return ReplyKeyboardMarkup([
@@ -45,22 +42,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     db.register_user(user.id, user.first_name)
     context.user_data.clear()
-    # Отправляем картинку Алема
-    await update.message.reply_photo(
-        photo=IMG_ALEM,
-        caption=(
-            f"Привет, {user.first_name}! 👋\n\n"
-            "Я Алем — твой ИИ-помощник из набора BALA LAB Microgreens ✨\n\n"
-            "Вместе мы будем:\n"
-            "🌱 Выращивать микрозелень\n"
-            "🤖 Отвечать на любые вопросы\n"
-            "📊 Вести дневник наблюдений\n"
-            "🏆 Получать достижения!\n\n"
-            "Выбери культуру для посева 👇"
-        ),
+    await update.message.reply_text(
+        f"Привет, {user.first_name}! 👋\n\n"
+        "Я Алем — ИИ-помощник из набора BALA LAB Microgreens ✨🌱\n\n"
+        "Вместе мы будем:\n"
+        "🌱 Выращивать микрозелень\n"
+        "🤖 Отвечать на любые вопросы\n"
+        "📊 Вести дневник наблюдений\n"
+        "🏆 Получать достижения!\n\n"
+        "Выбери культуру для посева 👇",
         reply_markup=main_keyboard()
     )
-    await update.message.reply_text("Какие семена сеешь?", reply_markup=plant_keyboard())
+    await update.message.reply_text("Какие семена сеешь? 🌱", reply_markup=plant_keyboard())
 
 async def choose_plant(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -70,9 +63,9 @@ async def choose_plant(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.start_experiment(query.from_user.id, plant_name)
     await query.edit_message_text(
         f"{plant['emoji']} {plant_name} — эксперимент начат!\n\n"
-        f"Прорастание: {plant['sprout_days']} дня\n"
-        f"Урожай через: {plant['harvest_days']} дней\n\n"
-        f"Факт: {plant['fact']}\n\n"
+        f"⏱ Прорастание: {plant['sprout_days']} дня\n"
+        f"🥗 Урожай через: {plant['harvest_days']} дней\n\n"
+        f"💡 Факт: {plant['fact']}\n\n"
         f"Задавай мне любые вопросы! 🔬"
     )
 
@@ -91,21 +84,17 @@ async def water(update: Update, context: ContextTypes.DEFAULT_TYPE):
     day = db.get_experiment_day(user_id)
     plant = PLANTS.get(exp["plant"], {})
     if already:
-        await update.message.reply_photo(
-            photo=IMG_WATER,
-            caption=f"Ты уже поливал сегодня! День {day} из {plant.get('harvest_days',7)} 🌅",
+        await update.message.reply_text(
+            f"✅ Уже поливал сегодня! День {day} из {plant.get('harvest_days',7)} 🌅",
             reply_markup=main_keyboard()
         )
     else:
         db.add_points(user_id, 5)
-        await update.message.reply_photo(
-            photo=IMG_WATER,
-            caption=(
-                f"Полив записан! День {day} 💧\n\n"
-                f"Совет: 2–3 ст.ложки воды.\n"
-                f"Субстрат влажный, но не мокрый!\n\n"
-                f"⭐ +5 очков!"
-            ),
+        await update.message.reply_text(
+            f"💧 Полив записан! День {day}\n\n"
+            f"Совет: 2–3 ст.ложки воды.\n"
+            f"Субстрат влажный, но не мокрый!\n\n"
+            f"⭐ +5 очков!",
             reply_markup=main_keyboard()
         )
         await check_achievements(update, user_id)
@@ -116,9 +105,9 @@ async def measure_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Сначала начни эксперимент! /start 🌱", reply_markup=main_keyboard())
         return
     context.user_data["waiting_height"] = True
-    await update.message.reply_photo(
-        photo=IMG_SPROUTS,
-        caption="Измерь самый высокий росток 📏\n\nНапиши высоту в мм (например: 15)"
+    await update.message.reply_text(
+        "📏 Измерь самый высокий росток линейкой\n\n"
+        "Напиши высоту в мм (например: 15)"
     )
 
 async def measure_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -135,16 +124,13 @@ async def measure_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prev = db.get_last_height(user_id)
     db.log_height(user_id, height)
     db.add_points(user_id, 10)
-    growth = f"\nПрирост: +{height-prev:.1f} мм" if prev is not None else ""
-    comments = ["Семена в темноте 🌰","Первые ростки! 🌱","Отличный старт ☀️","Бурный рост! 💡","Почти готово! 🥗"]
-    await update.message.reply_photo(
-        photo=IMG_SPROUTS,
-        caption=(
-            f"Записано! {height}мм{growth}\n"
-            f"День {day}\n"
-            f"{comments[min(int(height/15),4)]}\n\n"
-            f"⭐ +10 очков!"
-        ),
+    growth = f"\n📈 Прирост: +{height-prev:.1f} мм" if prev is not None else ""
+    comments = ["Семена в темноте 🌰", "Первые ростки! 🌱", "Отличный старт ☀️", "Бурный рост! 💡", "Почти готово! 🥗"]
+    await update.message.reply_text(
+        f"✅ Записано! {height}мм{growth}\n"
+        f"День {day}\n"
+        f"{comments[min(int(height/15),4)]}\n\n"
+        f"⭐ +10 очков!",
         reply_markup=main_keyboard()
     )
     await check_achievements(update, user_id)
@@ -161,16 +147,12 @@ async def diary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pct = min(int(day/harvest*100), 100)
     bar = "🟩" * (pct//10) + "⬜" * (10 - pct//10)
     heights = db.get_heights(user_id)
-    h_info = f"\nПоследний замер: {heights[-1]['height']} мм" if heights else ""
-    await update.message.reply_photo(
-        photo=IMG_SPROUTS,
-        caption=(
-            f"Дневник исследователя 📒\n"
-            f"{'─'*20}\n"
-            f"{plant.get('emoji','🌱')} {exp['plant']} · День {day}/{harvest}{h_info}\n"
-            f"Поливов: {db.get_watering_count(user_id)} · Очков: {db.get_points(user_id)} ⭐\n\n"
-            f"{bar} {pct}%"
-        ),
+    h_info = f"\n📏 Последний замер: {heights[-1]['height']} мм" if heights else ""
+    await update.message.reply_text(
+        f"📒 Дневник исследователя\n{'─'*20}\n"
+        f"{plant.get('emoji','🌱')} {exp['plant']} · День {day}/{harvest}{h_info}\n"
+        f"💧 Поливов: {db.get_watering_count(user_id)} · ⭐ Очков: {db.get_points(user_id)}\n\n"
+        f"{bar} {pct}%",
         reply_markup=diary_keyboard()
     )
 
@@ -182,40 +164,35 @@ async def diary_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         heights = db.get_heights(user_id)
         if not heights:
             await query.answer("Пока нет данных!", show_alert=True); return
-        text = "График роста 📊\n\n"
+        text = "📊 График роста\n\n"
         for r in heights[-7:]:
             text += f"День {r['day']:>2}: {'█'*min(int(r['height']/5),20)} {r['height']:.0f}мм\n"
-        await query.edit_message_caption(caption=text, reply_markup=diary_keyboard())
+        await query.edit_message_text(text, reply_markup=diary_keyboard())
     elif query.data == "note":
         context.user_data["adding_note"] = True
-        await query.edit_message_caption(caption="Напиши заметку в дневник 📝")
+        await query.edit_message_text("📝 Напиши заметку в дневник")
     elif query.data == "history":
         entries = db.get_diary_entries(user_id)
         if not entries:
             await query.answer("Заметок пока нет!", show_alert=True); return
-        text = "История заметок 📖\n\n" + "\n".join([f"День {e['day']}: {e['note']}" for e in entries[-5:]])
-        await query.edit_message_caption(caption=text, reply_markup=diary_keyboard())
+        text = "📖 История заметок\n\n" + "\n".join([f"День {e['day']}: {e['note']}" for e in entries[-5:]])
+        await query.edit_message_text(text, reply_markup=diary_keyboard())
 
 async def fact_of_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
     import random
     fact = random.choice(FACTS)
-    await update.message.reply_photo(
-        photo=IMG_SPROUTS,
-        caption=f"Факт дня от Алема! 🔬\n\n{fact['title']}\n\n{fact['text']}\n\nЗапиши в STEM-дневник! 📒",
+    await update.message.reply_text(
+        f"🔬 Факт дня от Алема!\n\n{fact['title']}\n\n{fact['text']}\n\nЗапиши в STEM-дневник! 📒",
         reply_markup=main_keyboard()
     )
 
 async def achievements(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     earned = db.get_achievements(user_id)
-    msg = f"Достижения исследователя 🏆\nОчков: {db.get_points(user_id)} ⭐\n{'─'*20}\n\n"
+    msg = f"🏆 Достижения исследователя\n⭐ Очков: {db.get_points(user_id)}\n{'─'*20}\n\n"
     for a in ACHIEVEMENTS:
         msg += f"{'✅' if a['id'] in earned else '🔒'} {a['name']}\n   {a['desc']}\n\n"
-    await update.message.reply_photo(
-        photo=IMG_ALEM,
-        caption=msg,
-        reply_markup=main_keyboard()
-    )
+    await update.message.reply_text(msg, reply_markup=main_keyboard())
 
 async def check_achievements(update: Update, user_id: int):
     earned = db.get_achievements(user_id)
@@ -233,16 +210,14 @@ async def check_achievements(update: Update, user_id: int):
             db.add_points(user_id, 50)
             a = next((x for x in ACHIEVEMENTS if x["id"]==aid), None)
             if a:
-                await update.message.reply_photo(
-                    photo=IMG_ALEM,
-                    caption=f"Новое достижение! 🎉\n\n{a['name']}\n{a['desc']}\n\n+50 очков! ⭐"
+                await update.message.reply_text(
+                    f"🎉 Новое достижение!\n\n{a['name']}\n{a['desc']}\n\n+50 очков! ⭐"
                 )
 
 async def instruction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     s = STEPS[0]
-    await update.message.reply_photo(
-        photo=IMG_SPROUTS,
-        caption=f"Инструкция — шаг 1 из {len(STEPS)} 📋\n\n{s['emoji']} {s['title']}\n\n{s['text']}\n\nСовет: {s['tip']}",
+    await update.message.reply_text(
+        f"📋 Инструкция — шаг 1 из {len(STEPS)}\n\n{s['emoji']} {s['title']}\n\n{s['text']}\n\n💡 {s['tip']}",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Следующий шаг ➡️", callback_data="step_1")]])
     )
 
@@ -251,12 +226,11 @@ async def step_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     n = int(query.data.replace("step_", ""))
     s = STEPS[n]
-    img = IMG_HARVEST if n == len(STEPS)-1 else IMG_SPROUTS
     btns = []
     if n < len(STEPS)-1: btns.append(InlineKeyboardButton("Следующий ➡️", callback_data=f"step_{n+1}"))
     if n > 0: btns.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"step_{n-1}"))
-    await query.edit_message_caption(
-        caption=f"Шаг {n+1} из {len(STEPS)} 📋\n\n{s['emoji']} {s['title']}\n\n{s['text']}\n\nСовет: {s['tip']}",
+    await query.edit_message_text(
+        f"📋 Шаг {n+1} из {len(STEPS)}\n\n{s['emoji']} {s['title']}\n\n{s['text']}\n\n💡 {s['tip']}",
         reply_markup=InlineKeyboardMarkup([btns]) if btns else None
     )
 
@@ -264,7 +238,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     day = db.get_experiment_day(update.effective_user.id)
     db.add_points(update.effective_user.id, 15)
     await update.message.reply_text(
-        f"Фото дня {day} сохранено! 📸\nФотографируй каждый день — тайм-лапс! 🎬\n\n+15 очков! ⭐",
+        f"📸 Фото дня {day} сохранено!\nФотографируй каждый день — тайм-лапс! 🎬\n\n+15 очков! ⭐",
         reply_markup=main_keyboard()
     )
 
@@ -306,7 +280,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         day = db.get_experiment_day(user_id)
         db.add_diary_entry(user_id, day, text)
         db.add_points(user_id, 5)
-        await update.message.reply_text(f"Заметка записана! +5 очков ⭐\n\n\"{text}\"", reply_markup=main_keyboard())
+        await update.message.reply_text(f"✅ Заметка записана! +5 очков ⭐\n\n\"{text}\"", reply_markup=main_keyboard())
         return
     if "Полить" in text: await water(update, context)
     elif "Записать рост" in text: await measure_start(update, context)
@@ -320,10 +294,11 @@ async def send_daily_reminder(context: ContextTypes.DEFAULT_TYPE):
     for u in db.get_active_users():
         if not db.watered_today(u["user_id"]):
             try:
-                await context.bot.send_photo(
+                await context.bot.send_message(
                     u["user_id"],
-                    photo=IMG_WATER,
-                    caption=f"Доброе утро, {u['name']}! ☀️\nДень {db.get_experiment_day(u['user_id'])} эксперимента\nНе забудь полить микрозелень! 💧",
+                    f"☀️ Доброе утро, {u['name']}!\n"
+                    f"🌱 День {db.get_experiment_day(u['user_id'])} эксперимента\n"
+                    f"💧 Не забудь полить микрозелень!",
                     reply_markup=main_keyboard()
                 )
             except: pass
