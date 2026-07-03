@@ -17,7 +17,7 @@ ai = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 IMG_ALEM = "AgACAgIAAxkBAAPcakeo6as2BBcXFqUj2BgzDGl0rcoAAikZaxslAkBK6jf4ulAWKg8BAAMCAAN5AAM8BA"
 IMG_SPROUTS = "AgACAgIAAxkBAAPdakeo6c-zHl-E4tYpIMgCiOaFnbQAAi0ZaxslAkBKzHmdMl-XWTUBAAMCAAN5AAM8BA"
-IMG_WATER = "AgACAgIAAxkBAAPeakeo6ZLRcAdZpCFRr_426c3CP4oAAiwZaxslAkBKG2juMJendGgBAAMCCAN5AAM8BA"
+IMG_WATER = "AgACAgIAAxkBAAPeakeo6ZLRcAdZpCFRr_426c3CP4oAAiwZaxslAkBKG2juMJendGgBAAMCAAN5AAM8BA"
 IMG_HARVEST = "AgACAgIAAxkBAAPfakeo6YGz2cT1auqNESsfVokyGNUAAisZaxslAkBKYh9KXWvdC0ABAAMCAAN5AAM8BA"
 
 SYSTEM_PROMPT = """Ты Алем — дружелюбный ИИ-помощник для детей 6+ из набора BALA LAB Microgreens.
@@ -248,8 +248,12 @@ async def step_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    file_id = update.message.photo[-1].file_id
-    await update.message.reply_text(f"file_id:\n{file_id}")
+    day = db.get_experiment_day(update.effective_user.id)
+    db.add_points(update.effective_user.id, 15)
+    await update.message.reply_text(
+        f"📸 Фото дня {day} сохранено!\nФотографируй каждый день — тайм-лапс! 🎬\n\n+15 очков! ⭐",
+        reply_markup=main_keyboard()
+    )
 
 async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
