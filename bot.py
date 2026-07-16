@@ -13,7 +13,7 @@ from content import FACTS, PLANTS, ACHIEVEMENTS, STEPS
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
-db = Database("balalab.db")
+db = Database(os.getenv("DATABASE_URL"))
 ai = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 IMG_ALEM = "AgACAgIAAxkBAAPcakeo6as2BBcXFqUj2BgzDGl0rcoAAikZaxslAkBK6jf4ulAWKg8BAAMCAAN5AAM8BA"
