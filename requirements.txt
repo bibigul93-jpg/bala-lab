@@ -3,3 +3,4 @@ anthropic>=0.25.0
 reportlab
 qrcode
 gTTS
+psycopg2-binary
