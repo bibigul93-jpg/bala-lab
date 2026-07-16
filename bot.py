@@ -5,6 +5,7 @@ import logging
 import os
 import anthropic
 from datetime import datetime, time
+from certificate import generate_certificate
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from database import Database
@@ -88,9 +89,22 @@ async def water(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not exp:
         await update.message.reply_text("Сначала начни эксперимент! Нажми /start 🌱", reply_markup=main_keyboard())
         return
-    already = db.log_watering(user_id)
+
     day = db.get_experiment_day(user_id)
     plant = PLANTS.get(exp["plant"], {})
+    harvest_days = plant.get("harvest_days", 7)
+
+    if day > harvest_days:
+        await update.message.reply_text(
+            f"🌾 Урожай уже готов, ждёт тебя {day - harvest_days} {'день' if day-harvest_days==1 else 'дня'}!\n\n"
+            f"✂️ Срежь ножницами, промой и попробуй!",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🌾 Урожай собран", callback_data="harvest_done")
+            ]])
+        )
+        return
+
+    already = db.log_watering(user_id)
     if already:
         await update.message.reply_photo(
             photo=IMG_WATER,
