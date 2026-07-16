@@ -6,6 +6,8 @@ import os
 import anthropic
 from datetime import datetime, time
 from certificate import generate_certificate
+from gtts import gTTS
+import io
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from database import Database
@@ -212,6 +214,20 @@ async def fact_of_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
         caption=f"🔬 Факт дня от Алема!\n\n{fact['title']}\n\n{fact['text']}\n\nЗапиши в STEM-дневник! 📒",
         reply_markup=main_keyboard()
     )
+    try:
+        speech_text = f"{fact['title']}. {fact['text']}"
+        tts = gTTS(text=speech_text, lang='ru')
+        buf = io.BytesIO()
+        tts.write_to_fp(buf)
+        buf.seek(0)
+        await update.message.reply_audio(
+            audio=buf,
+            filename="alem_fact.mp3",
+            title="Факт дня от Алема",
+            performer="BALA LAB"
+        )
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
 
 async def achievements(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
